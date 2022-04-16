@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Intro to MapView - Create a 2D map</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      body{
+          position:relative;
+      }
+
+      .top{
+        box-sizing: border-box;
+        height: 70px;
+        width: 100%;
+        background-color:rgba(248, 7, 7, 0.821);
+        color: rgb(2, 252, 85);
+        padding-left: 40px;
+        box-sizing:border-box;
+      }
+      .top b{
+        line-height:70px;
+        font-size: 40px;
+      }
+      .top i{
+        line-height:70px;
+        font-size: 10px;
+      }
+      #basemapGalleryDiv {
+        position: absolute;
+        top:70px;
+        left: 85%;
+        height: 100%;
+        width: 200px;
+        z-index: 1;
+      }
+      #other{
+        position: absolute;
+        z-index: 1;
+        left:69% ;
+        top: 60%;
+        height: 300px;
+      }
+      #final{
+        /*height: 350px;*/
+        position: absolute;
+        z-index: 1;
+        left: 72%;
+        top: 70px;
+      }
+      .top #searchdiv{
+        float: right;
+        box-sizing: border-box;
+        /* background-color: black;
+        height: 10px;
+        width: 10px; */
+        z-index: 1;
+        margin-top: 20px;
+        margin-right: 20px;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.23/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.23/"></script>
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/Legend",
+        "esri/widgets/LayerList",
+        "esri/widgets/ScaleBar",
+        "esri/widgets/Search",
+        "esri/widgets/Editor",
+        "esri/widgets/Print",
+        "esri/widgets/Home",
+        "esri/layers/TileLayer"
+      ], (
+        Map,
+        MapView,
+        FeatureLayer,
+        BasemapGallery,
+        Legend,
+        LayerList,
+        ScaleBar,
+        Search,
+        Editor,
+        Print,
+        Home,
+        TileLayer
+      ) => {
+        const map = new Map({
+          basemap: "topo"
+          //layers:[featureLayer]
+        });
+        const view = new MapView({
+          container: "viewDiv", // Reference to the view div created in step 5
+          map: map, // Reference to the map object created before the view
+          zoom: 4, // Sets zoom level based on level of detail (LOD)
+          center: [120, 21] // longitude, latitude
+        });
+        let homeWidget = new Home({
+          view: view
+        });
+
+        // adds the home widget to the top left corner of the MapView
+        
+        const featureLayer = new FeatureLayer({
+          url: "https://www.geosceneonline.cn/server/rest/services/Hosted/xiamen_311/FeatureServer",
+          title: "钦州公共事件",
+          popupTemplate: {
+            title: "钦州公共事件",
+            lastEditInfoEnabled: false,
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "name"
+                  },
+
+                  {
+                    fieldName: "type"
+                  }
+                ]
+              }
+            ]
+          }
+        });
+        
+        let layer = new TileLayer({url: "https://www.geosceneonline.cn/server/rest/services/Hosted/provinceWGS84raster/MapServer",
+          title: "地震台风",
+          popupTemplate: {
+            title: "地震台风",
+            lastEditInfoEnabled: false,
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "name"
+                  },
+
+                  {
+                    fieldName: "type"
+                  }
+                ]
+              }
+            ]
+          }
+        });
+        map.add(layer);
+        map.add(featureLayer);
+
+        const basemapGallery = new BasemapGallery({
+          view: view,
+          container: basemapGalleryDiv
+        });//底图库
+        
+          const legend = new Legend({
+          view: view,
+          container: "final",
+          layerInfos: [
+            {
+              layer: featureLayer,
+              title: "钦州公共事件"
+            }
+          ]
+        });//图例    
+
+        const layerList = new LayerList({
+          view: view
+        });
+        // Adds widget below other elements in the top left corner of the view
+        view.ui.add(layerList, {
+          position: "top-left"
+        });//图层列表
+                
+        const editor = new Editor({
+          view: view
+        });
+
+        view.ui.add(editor, "top-left");
+        const print = new Print({
+          view: view,
+          container: "other",
+          // specify your own print service
+          printServiceUrl:
+            "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+        });//编辑器
+
+        // view.ui.add(legend, "bottom-right");
+
+        var scaleBar = new ScaleBar({
+          view: view,
+          style: "ruler"
+        });
+        // Add widget to the bottom left corner of the view
+        view.ui.add(scaleBar, {
+          position: "top-left"
+        });//比例尺
+        
+        const searchWidget = new Search({
+          view: view,
+          container: "searchdiv"
+        });//搜索小部件
+        
+        // Adds the search widget below other elements in
+        // the top left corner of the view
+        // view.ui.add(searchWidget, {
+        //   position: "top-left",
+        //   index: 2
+        // });
+        // At the very minimum, set the Editor's view
+
+
+        // Adds widget below other elements in the top left corner of the view
+        // view.ui.add(print, {
+        //   position: "top-right"
+        // });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="basemapGalleryDiv"></div>
+    <div class="top">
+      <b>钦州欢迎您</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <i>————3195706010王正芃</i>
+      <div id="searchdiv"></div>
+    </div>
+    <div id="viewDiv"></div>
+    <div id="other"></div>
+    <div id="final"></div>
+  </body>
+</html>
